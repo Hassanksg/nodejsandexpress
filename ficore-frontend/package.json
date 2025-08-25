@@ -1,0 +1,27 @@
+// package.json
+{
+  "name": "ficore-frontend",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "ng serve",
+    "build": "ng build",
+    "ionic:build": "ng build --prod",
+    "ionic:serve": "ionic serve",
+    "android": "ionic capacitor build android"
+  },
+  "dependencies": {
+    "@angular/core": "^15.0.0",
+    "@ionic/angular": "^7.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
+    "axios": "^1.3.4",
+    "chart.js": "^4.2.1",
+    "@ionic-native/file": "^5.36.0"
+  },
+  "devDependencies": {
+    "@angular/cli": "^15.0.0",
+    "@angular/compiler-cli": "^15.0.0",
+    "typescript": "^4.9.5"
+  }
+}

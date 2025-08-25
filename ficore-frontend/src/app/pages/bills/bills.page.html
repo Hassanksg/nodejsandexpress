@@ -1,0 +1,79 @@
+<!-- src/app/pages/bills/bills.page.html -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Bills</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Create Bill</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Name</ion-label>
+        <ion-input [(ngModel)]="billData.name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Amount</ion-label>
+        <ion-input [(ngModel)]="billData.amount"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Due Date</ion-label>
+        <ion-input [(ngModel)]="billData.due_date" type="date"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Frequency</ion-label>
+        <ion-select [(ngModel)]="billData.frequency">
+          <ion-select-option value="one-time">One-Time</ion-select-option>
+          <ion-select-option value="weekly">Weekly</ion-select-option>
+          <ion-select-option value="monthly">Monthly</ion-select-option>
+          <ion-select-option value="quarterly">Quarterly</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Category</ion-label>
+        <ion-select [(ngModel)]="billData.category">
+          <ion-select-option value="Utilities">Utilities</ion-select-option>
+          <ion-select-option value="Rent">Rent</ion-select-option>
+          <ion-select-option value="Food">Food</ion-select-option>
+          <ion-select-option value="Transport">Transport</ion-select-option>
+          <ion-select-option value="Insurance">Insurance</ion-select-option>
+          <ion-select-option value="Healthcare">Healthcare</ion-select-option>
+          <ion-select-option value="Education">Education</ion-select-option>
+          <ion-select-option value="Entertainment">Entertainment</ion-select-option>
+          <ion-select-option value="Miscellaneous">Miscellaneous</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Reminder Days</ion-label>
+        <ion-input [(ngModel)]="billData.reminder_days" type="number"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Notes</ion-label>
+        <ion-input [(ngModel)]="billData.notes"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="createBill()">Create Bill</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="dashboard?.bills?.length">
+    <ion-card-header>
+      <ion-card-title>Bills</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let bill of dashboard.bills">
+          {{ bill.name }} - {{ bill.amount | currency:'NGN' }} - {{ bill.due_date | date:'shortDate' }}
+          <ion-select slot="end" [(ngModel)]="bill.status" (ionChange)="toggleBillStatus(bill._id, $event.detail.value)">
+            <ion-select-option value="pending">Pending</ion-select-option>
+            <ion-select-option value="paid">Paid</ion-select-option>
+            <ion-select-option value="overdue">Overdue</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" (click)="exportPDF('history')">Export History PDF</ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

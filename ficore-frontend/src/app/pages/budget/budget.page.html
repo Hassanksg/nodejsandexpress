@@ -1,0 +1,63 @@
+<!-- src/app/pages/budget/budget.page.html -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Budget</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Create Budget</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Income</ion-label>
+        <ion-input [(ngModel)]="budgetData.income"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Housing</ion-label>
+        <ion-input [(ngModel)]="budgetData.housing"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Food</ion-label>
+        <ion-input [(ngModel)]="budgetData.food"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Transport</ion-label>
+        <ion-input [(ngModel)]="budgetData.transport"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Dependents</ion-label>
+        <ion-input [(ngModel)]="budgetData.dependents" type="number"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Miscellaneous</ion-label>
+        <ion-input [(ngModel)]="budgetData.miscellaneous"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Others</ion-label>
+        <ion-input [(ngModel)]="budgetData.others"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Savings Goal</ion-label>
+        <ion-input [(ngModel)]="budgetData.savings_goal"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="createBudget()">Create Budget</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="dashboard?.latest_budget">
+    <ion-card-header>
+      <ion-card-title>Latest Budget</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item>Income: {{ dashboard.latest_budget.income | currency:'NGN' }}</ion-item>
+        <ion-item>Surplus/Deficit: {{ dashboard.latest_budget.surplus_deficit | currency:'NGN' }}</ion-item>
+      </ion-list>
+      <ion-button expand="block" (click)="exportPDF('single', dashboard.latest_budget._id)">Export PDF</ion-button>
+      <ion-button expand="block" (click)="exportPDF('history')">Export History PDF</ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

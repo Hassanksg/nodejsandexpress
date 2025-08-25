@@ -1,0 +1,62 @@
+<!-- src/app/pages/shopping/shopping.page.html -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Shopping</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Create Shopping List</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">List Name</ion-label>
+        <ion-input [(ngModel)]="listData.list_name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Budget</ion-label>
+        <ion-input [(ngModel)]="listData.budget"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="createList()">Create List</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="dashboard?.latest_list">
+    <ion-card-header>
+      <ion-card-title>Add Item to {{ dashboard.latest_list.list_name }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Item Name</ion-label>
+        <ion-input [(ngModel)]="newItem.name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Estimated Cost</ion-label>
+        <ion-input [(ngModel)]="newItem.estimated_cost"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Quantity</ion-label>
+        <ion-input [(ngModel)]="newItem.quantity" type="number"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="addItem()">Add Item</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="dashboard?.latest_list">
+    <ion-card-header>
+      <ion-card-title>Items</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let item of dashboard.latest_list.items">
+          <ion-checkbox slot="start" [(ngModel)]="item.is_purchased" (ionChange)="toggleItem(dashboard.latest_list._id, item._id)"></ion-checkbox>
+          {{ item.name }} - {{ item.estimated_cost | currency:'NGN' }} - Qty: {{ item.quantity }}
+        </ion-item>
+      </ion-list>
+      <ion-button expand="block" (click)="exportPDF('single', dashboard.latest_list._id)">Export PDF</ion-button>
+      <ion-button expand="block" (click)="exportPDF('history')">Export History PDF</ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

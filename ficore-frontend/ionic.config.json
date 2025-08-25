@@ -1,0 +1,8 @@
+// ionic.config.json
+{
+  "name": "ficore-frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
