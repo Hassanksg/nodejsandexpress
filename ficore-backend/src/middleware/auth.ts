@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { config } from '../../config/env';
+import { config } from './../config/env';
 import { UserModel } from '../models/user';
 import { UnauthorizedError, ValidationError } from '../types/errors';
 import { logger } from '../utils/logger';
@@ -44,4 +44,5 @@ export async function validateToken(token: string) {
     logger.error('Token validation failed', { error });
     throw new UnauthorizedError('Invalid or expired token');
   }
+
 }
