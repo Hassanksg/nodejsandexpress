@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 export async function createBill(req: Request, res: Response) {
   try {
     const { name, amount, due_date, frequency, category, reminder_days, notes } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const requiredFields = { name, amount, due_date, frequency, category, reminder_days };
     for (const [key, value] of Object.entries(requiredFields)) {
@@ -37,8 +37,8 @@ export async function createBill(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'create_bill', bill[0]._id.toString());
 
     return res.json({ success: true, bill: bill[0] });
-  } catch (error) {
-    logger.error('Error creating bill', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error creating bill', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -46,7 +46,7 @@ export async function createBill(req: Request, res: Response) {
 
 export async function getBillDashboard(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
 
@@ -61,7 +61,7 @@ export async function getBillDashboard(req: Request, res: Response) {
     const totalOverdue = await BillModel.countDocuments({ user_id: userId, status: 'overdue' });
 
     const categories = await BillModel.aggregate([
-      { $match: { user_id: userId } },
+      { $match: { user_id: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: '$category', total: { $sum: '$amount' } } },
       { $project: { label: '$_id', value: '$total', _id: 0 } },
     ]);
@@ -93,8 +93,8 @@ export async function getBillDashboard(req: Request, res: Response) {
         pages: Math.ceil(totalBills / limit),
       },
     });
-  } catch (error) {
-    logger.error('Error fetching bill dashboard', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error fetching bill dashboard', { error, userId: req.user!.id });
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -102,7 +102,7 @@ export async function getBillDashboard(req: Request, res: Response) {
 export async function toggleBillStatus(req: Request, res: Response) {
   try {
     const { bill_id, status } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!bill_id || !['pending', 'paid', 'overdue'].includes(status)) {
       throw new ValidationError('Invalid bill ID or status');
@@ -118,8 +118,8 @@ export async function toggleBillStatus(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'toggle_bill_status', bill_id);
 
     return res.json({ success: true, bill });
-  } catch (error) {
-    logger.error('Error toggling bill status', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error toggling bill status', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -128,7 +128,7 @@ export async function toggleBillStatus(req: Request, res: Response) {
 export async function deleteBill(req: Request, res: Response) {
   try {
     const { bill_id } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!bill_id) {
       throw new ValidationError('Bill ID is required');
@@ -142,8 +142,8 @@ export async function deleteBill(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'delete_bill', bill_id);
 
     return res.json({ success: true, message: 'Bill deleted successfully' });
-  } catch (error) {
-    logger.error('Error deleting bill', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error deleting bill', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -151,7 +151,7 @@ export async function deleteBill(req: Request, res: Response) {
 
 export async function exportBillPDF(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const exportType = req.params.exportType;
     const billId = req.params.billId;
 
@@ -174,14 +174,14 @@ export async function exportBillPDF(req: Request, res: Response) {
     const creditCost = exportType === 'single' ? 1 : 2;
     await deductFicoreCredits(userId, creditCost, `export_bill_pdf_${exportType}`, billId || null);
 
-    const pdfBuffer = await createBillPDF(bills, userId, exportType);
+    const pdfBuffer = await createBillPDF(bills, userId, exportType === 'history' ? 'multiple' : 'single');
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=bill_${exportType}_${new Date().toISOString().split('T')[0]}.pdf`,
     });
     return res.send(pdfBuffer);
-  } catch (error) {
-    logger.error('Error exporting bill PDF', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error exporting bill PDF', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
