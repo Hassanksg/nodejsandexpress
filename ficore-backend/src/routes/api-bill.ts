@@ -1,6 +1,6 @@
 // routes/api-bill.ts
 import express from 'express';
-import { jwtRequired } from '../middleware/auth';
+import { jwtRequired } from '../services/auth';
 import { createBill, getBillDashboard, toggleBillStatus, deleteBill, exportBillPDF } from '../controllers/bill';
 import { Request, Response } from 'express';
 
@@ -12,5 +12,6 @@ router.get('/manage', jwtRequired, getBillDashboard); // Reuse for manage
 router.post('/toggle', jwtRequired, toggleBillStatus);
 router.post('/delete', jwtRequired, deleteBill);
 router.get('/export_pdf/:exportType/:billId?', jwtRequired, exportBillPDF);
+
 
 export default router;
