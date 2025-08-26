@@ -1,4 +1,3 @@
-// ficore-backend/src/services/auth.ts
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
@@ -10,7 +9,7 @@ import { UserDocument, UserModel } from '../models/user';
  * Middleware to check for a valid JWT token on protected routes.
  * It reads the token from the Authorization header and validates it.
  */
-export const jwtRequired = (req: Request, res: Response, next: NextFunction) => {
+export const jwtRequired = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   // Check if Authorization header exists and starts with 'Bearer '
@@ -39,15 +38,15 @@ export const jwtRequired = (req: Request, res: Response, next: NextFunction) => 
       exp?: number;
     };
     
-    // Attach decoded payload to request
-    // This is the correct way to assign the user object to the request
-    req.user = new UserModel({
-      _id: decoded.id,
-      display_name: decoded.display_name,
-      email: decoded.email,
-      role: decoded.role,
-      ficore_credit_balance: 0 // Placeholder or fetched from DB
-    });
+    // Find the user in the database and attach the Mongoose document to the request
+    const user = await UserModel.findById(decoded.id);
+
+    if (!user) {
+      logger.warn('Unauthorized access: User not found from token', { userId: decoded.id });
+      return res.status(401).json({ error: 'Unauthorized: User not found' });
+    }
+
+    req.user = user;
 
     logger.info('Token validated successfully', { userId: decoded.id });
     next();
@@ -55,4 +54,24 @@ export const jwtRequired = (req: Request, res: Response, next: NextFunction) => 
     logger.error('Token validation failed', { error, path: req.path });
     return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
   }
+};
+
+/**
+ * Placeholder for user login. 
+ * This function should be implemented with real logic.
+ */
+export const login = async (email: string, password: string) => {
+    // Logic to find user and check password
+    // ...
+    return { success: true, message: 'Login successful' };
+};
+
+/**
+ * Placeholder for user registration. 
+ * This function should be implemented with real logic.
+ */
+export const register = async (display_name: string, email: string, password: string) => {
+    // Logic to create a new user
+    // ...
+    return { success: true, message: 'Registration successful' };
 };
