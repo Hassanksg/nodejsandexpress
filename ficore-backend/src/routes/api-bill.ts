@@ -1,4 +1,3 @@
-// ficore-backend/src/routes/api-bill.ts
 import express, { Request, Response } from 'express';
 import { jwtRequired } from '../services/auth';
 import { createBill, getBillDashboard, toggleBillStatus, deleteBill, exportBillPDF } from '../controllers/bill';
@@ -6,17 +5,9 @@ import { UserDocument } from '../models/user';
 
 const router = express.Router();
 
-// Helper to get the user ID and assert its presence
-const getUserId = (req: Request): string => {
-  if (!req.user) {
-    throw new Error('User not authenticated');
-  }
-  return (req.user as UserDocument)._id;
-};
-
 router.post('/new', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const bill = await createBill(userId, req.body);
     res.json({ success: true, data: bill });
   } catch (error: any) {
@@ -26,8 +17,8 @@ router.post('/new', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
-    const dashboardData = await getBillDashboard(userId, req.query as any); // Pass req.query for pagination, etc.
+    const userId = (req.user as UserDocument)._id;
+    const dashboardData = await getBillDashboard(userId, req.query);
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -36,8 +27,8 @@ router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/manage', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
-    const dashboardData = await getBillDashboard(userId, req.query as any); // Pass req.query
+    const userId = (req.user as UserDocument)._id;
+    const dashboardData = await getBillDashboard(userId, req.query);
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -46,7 +37,7 @@ router.get('/manage', jwtRequired, async (req: Request, res: Response) => {
 
 router.post('/toggle', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { bill_id } = req.body;
     const bill = await toggleBillStatus(userId, bill_id);
     res.json({ success: true, data: bill });
@@ -57,7 +48,7 @@ router.post('/toggle', jwtRequired, async (req: Request, res: Response) => {
 
 router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { bill_id } = req.body;
     const result = await deleteBill(userId, bill_id);
     res.json({ success: true, message: result.message });
@@ -68,7 +59,7 @@ router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/export_pdf/:exportType/:billId?', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { exportType, billId } = req.params;
     const pdfBuffer = await exportBillPDF(userId, exportType, billId);
     res.setHeader('Content-Type', 'application/pdf');
