@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import { config } from './config/env';
-import { connectDB } from '../config/db';
+import { connectDB } from './config/db';
 import mainRouter from './routes/index';
 import { errorHandler } from './middleware/error';
 import budgetRouter from './routes/api-budget';
@@ -33,3 +33,4 @@ connectDB().then(() => {
 
 
 export default app;
+
