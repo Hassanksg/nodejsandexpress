@@ -1,7 +1,7 @@
 // app.ts
 import express from 'express';
 import cors from 'cors';
-import { config } from '../config/env';
+import { config } from './config/env';
 import { connectDB } from '../config/db';
 import mainRouter from './routes/index';
 import { errorHandler } from './middleware/error';
@@ -30,5 +30,6 @@ app.use(errorHandler);
 connectDB().then(() => {
   app.listen(5000, () => logger.info('Server running on port 5000'));
 });
+
 
 export default app;
