@@ -1,3 +1,4 @@
+// ficore-backend/src/routes/api-budget.ts
 import express, { Request, Response } from 'express';
 import { jwtRequired } from '../services/auth';
 import { createBudget, getDashboard, exportBudgetPDF } from '../controllers/budget';
@@ -8,9 +9,17 @@ import { UserDocument } from '../models/user';
 
 const router = express.Router();
 
+// Helper to get the user ID and assert its presence
+const getUserId = (req: Request): string => {
+  if (!req.user) {
+    throw new Error('User not authenticated');
+  }
+  return (req.user as UserDocument)._id;
+};
+
 router.post('/new', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as UserDocument)._id;
+    const userId = getUserId(req);
     const budget = await createBudget(userId, req.body);
     res.json({ success: true, data: budget });
   } catch (error: any) {
@@ -20,8 +29,8 @@ router.post('/new', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as UserDocument)._id;
-    const dashboardData = await getDashboard(userId);
+    const userId = getUserId(req);
+    const dashboardData = await getDashboard(userId, req.query as any); // Pass req.query
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -30,8 +39,8 @@ router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/manage', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as UserDocument)._id;
-    const dashboardData = await getDashboard(userId);
+    const userId = getUserId(req);
+    const dashboardData = await getDashboard(userId, req.query as any); // Pass req.query
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -44,7 +53,7 @@ router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
     if (!budget_id) {
       return res.status(400).json({ success: false, error: 'Budget ID is required' });
     }
-    const userId = (req.user as UserDocument)._id;
+    const userId = getUserId(req);
     const result = await BudgetModel.deleteOne({ _id: budget_id, user_id: userId });
     if (result.deletedCount === 0) {
       throw new NotFoundError('Budget not found');
@@ -58,7 +67,7 @@ router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/export_pdf/:exportType/:budgetId?', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as UserDocument)._id;
+    const userId = getUserId(req);
     const { exportType, budgetId } = req.params;
     const pdfBuffer = await exportBudgetPDF(userId, exportType, budgetId);
     res.setHeader('Content-Type', 'application/pdf');
