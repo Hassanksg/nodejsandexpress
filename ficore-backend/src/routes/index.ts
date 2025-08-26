@@ -1,3 +1,4 @@
+// ficore-backend/src/routes/index.ts
 import express, { Request, Response } from 'express';
 import budgetRouter from './api-budget';
 import billRouter from './api-bill';
