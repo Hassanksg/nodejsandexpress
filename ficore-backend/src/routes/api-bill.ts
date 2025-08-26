@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { jwtRequired } from '../services/auth';
 import { createBill, getBillDashboard, toggleBillStatus, deleteBill, exportBillPDF } from '../controllers/bill';
 
