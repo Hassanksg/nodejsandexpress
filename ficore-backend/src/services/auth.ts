@@ -1,73 +1,64 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import { config } from './../config/env';
-import { UserModel } from '../models/user';
-import { UnauthorizedError, ValidationError } from '../types/errors';
-import { logger } from '../utils/logger';
+Simport jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import { config } from '../config/env';
+import { logger } from '../utils/logger';
+import { UnauthorizedError } from '../types/errors';
 
-// Existing functions (login, register, validateToken) remain unchanged
-
-export async function login(email: string, password: string) {
-  const user = await UserModel.findOne({ email });
-  if (!user) {
-    logger.warn('Login attempt failed: User not found', { email });
-    throw new UnauthorizedError('Invalid credentials');
-  }
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    logger.warn('Login attempt failed: Incorrect password', { email });
-    throw new UnauthorizedError('Invalid credentials');
-  }
-  const token = jwt.sign(
-    { id: user._id, display_name: user.display_name, email: user.email, role: user.role },
-    config.jwtSecret,
-    { expiresIn: '1d' }
-  );
-  logger.info('User logged in', { userId: user._id });
-  return { success: true, token, user: { id: user._id, display_name: user.display_name, email: user.email } };
-}
-
-export async function register(display_name: string, email: string, password: string) {
-  const existingUser = await UserModel.findOne({ email });
-  if (existingUser) {
-    logger.warn('Registration attempt failed: Email already exists', { email });
-    throw new ValidationError('Email already exists');
-  }
-  const user = await UserModel.create({ display_name, email, password });
-  logger.info('User registered', { userId: user._id });
-  return { success: true, user: { id: user._id, display_name: user.display_name, email: user.email } };
-}
-
-export async function validateToken(token: string) {
-  try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    return decoded;
-  } catch (error) {
-    logger.error('Token validation failed', { error });
-    throw new UnauthorizedError('Invalid or expired token');
-  }
+// Define a custom Request interface to include the user property
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    display_name: string;
+    email: string;
+    role: string;
+  };
 }
 
 /**
  * Middleware to check for a valid JWT token on protected routes.
  * It reads the token from the Authorization header and validates it.
  */
-export async function jwtRequired(req: Request, res: Response, next: NextFunction) {
+export const jwtRequired = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
+
+  // Check if Authorization header exists and starts with 'Bearer '
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    logger.warn('Unauthorized access attempt: No token provided', { path: req.path });
     return res.status(401).json({ error: 'Unauthorized: No token provided' });
   }
 
+  // Extract token from 'Bearer <token>'
   const token = authHeader.split(' ')[1];
+
+  // Check if token exists
+  if (!token) {
+    logger.warn('Unauthorized access attempt: Invalid token format', { path: req.path });
+    return res.status(401).json({ error: 'Unauthorized: Invalid token format' });
+  }
+
   try {
-    const decoded = await validateToken(token);
-    // Attach the decoded token payload to the request for use in controllers
-    // Example: (req as any).user = decoded; 
-    // This part requires your custom Request type to be defined.
-    (req as any).user = decoded; // Temporary fix
+    // Verify token with type assertion for decoded payload
+    const decoded = jwt.verify(token, config.jwtSecret) as {
+      id: string;
+      display_name: string;
+      email: string;
+      role: string;
+      iat?: number;
+      exp?: number;
+    };
+
+    // Attach decoded payload to request
+    req.user = {
+      id: decoded.id,
+      display_name: decoded.display_name,
+      email: decoded.email,
+      role: decoded.role,
+    };
+
+    logger.info('Token validated successfully', { userId: decoded.id });
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    logger.error('Token validation failed', { error, path: req.path });
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
   }
-}
+};
