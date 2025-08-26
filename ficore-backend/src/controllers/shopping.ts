@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 export async function createShoppingList(req: Request, res: Response) {
   try {
     const { list_name, budget, items } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!list_name) {
       throw new ValidationError('List name is required');
@@ -35,8 +35,8 @@ export async function createShoppingList(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'create_shopping_list', shoppingList[0]._id.toString());
 
     return res.json({ success: true, shopping_list: shoppingList[0] });
-  } catch (error) {
-    logger.error('Error creating shopping list', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error creating shopping list', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -45,7 +45,7 @@ export async function createShoppingList(req: Request, res: Response) {
 export async function addShoppingItem(req: Request, res: Response) {
   try {
     const { list_id, name, estimated_cost, quantity } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!list_id || !name || !estimated_cost || !quantity) {
       throw new ValidationError('List ID, name, estimated cost, and quantity are required');
@@ -69,8 +69,8 @@ export async function addShoppingItem(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'add_shopping_item', list_id);
 
     return res.json({ success: true, shopping_list: shoppingList });
-  } catch (error) {
-    logger.error('Error adding shopping item', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error adding shopping item', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -78,7 +78,7 @@ export async function addShoppingItem(req: Request, res: Response) {
 
 export async function getShoppingDashboard(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
 
@@ -91,14 +91,14 @@ export async function getShoppingDashboard(req: Request, res: Response) {
     const latestList = shoppingLists[0] || null;
 
     const categories = await ShoppingListModel.aggregate([
-      { $match: { user_id: userId } },
+      { $match: { user_id: new mongoose.Types.ObjectId(userId) } },
       { $unwind: '$items' },
       { $group: { _id: '$items.category', total: { $sum: { $multiply: ['$items.estimated_cost', '$items.quantity'] } } } },
       { $project: { label: '$_id', value: '$total', _id: 0 } },
     ]);
 
-    const totalSpent = shoppingLists.reduce((sum: number, list: any) => 
-      sum + list.items.reduce((listSum: number, item: any) => 
+    const totalSpent = shoppingLists.reduce((sum: number, list: any) =>
+      sum + list.items.reduce((listSum: number, item: any) =>
         listSum + (item.is_purchased ? item.estimated_cost * item.quantity : 0), 0), 0);
 
     const insights = [];
@@ -132,8 +132,8 @@ export async function getShoppingDashboard(req: Request, res: Response) {
         pages: Math.ceil(totalLists / limit),
       },
     });
-  } catch (error) {
-    logger.error('Error fetching shopping dashboard', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error fetching shopping dashboard', { error, userId: req.user!.id });
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -141,7 +141,7 @@ export async function getShoppingDashboard(req: Request, res: Response) {
 export async function toggleShoppingItem(req: Request, res: Response) {
   try {
     const { list_id, item_id } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!list_id || !item_id) {
       throw new ValidationError('List ID and item ID are required');
@@ -162,8 +162,8 @@ export async function toggleShoppingItem(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'toggle_shopping_item', list_id);
 
     return res.json({ success: true, shopping_list: shoppingList });
-  } catch (error) {
-    logger.error('Error toggling shopping item', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error toggling shopping item', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -172,7 +172,7 @@ export async function toggleShoppingItem(req: Request, res: Response) {
 export async function deleteShoppingList(req: Request, res: Response) {
   try {
     const { list_id } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!list_id) {
       throw new ValidationError('List ID is required');
@@ -186,8 +186,8 @@ export async function deleteShoppingList(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'delete_shopping_list', list_id);
 
     return res.json({ success: true, message: 'Shopping list deleted successfully' });
-  } catch (error) {
-    logger.error('Error deleting shopping list', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error deleting shopping list', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -196,7 +196,7 @@ export async function deleteShoppingList(req: Request, res: Response) {
 export async function deleteShoppingItem(req: Request, res: Response) {
   try {
     const { list_id, item_id } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!list_id || !item_id) {
       throw new ValidationError('List ID and item ID are required');
@@ -217,8 +217,8 @@ export async function deleteShoppingItem(req: Request, res: Response) {
     await deductFicoreCredits(userId, 1, 'delete_shopping_item', list_id);
 
     return res.json({ success: true, shopping_list: shoppingList });
-  } catch (error) {
-    logger.error('Error deleting shopping item', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error deleting shopping item', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -226,7 +226,7 @@ export async function deleteShoppingItem(req: Request, res: Response) {
 
 export async function exportShoppingPDF(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const exportType = req.params.exportType;
     const listId = req.params.listId;
 
@@ -249,14 +249,14 @@ export async function exportShoppingPDF(req: Request, res: Response) {
     const creditCost = exportType === 'single' ? 1 : 2;
     await deductFicoreCredits(userId, creditCost, `export_shopping_pdf_${exportType}`, listId || null);
 
-    const pdfBuffer = await createShoppingPDF(shoppingLists, userId, exportType);
+    const pdfBuffer = await createShoppingPDF(shoppingLists, userId, exportType === 'history' ? 'multiple' : 'single');
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=shopping_${exportType}_${new Date().toISOString().split('T')[0]}.pdf`,
     });
     return res.send(pdfBuffer);
-  } catch (error) {
-    logger.error('Error exporting shopping PDF', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error exporting shopping PDF', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
