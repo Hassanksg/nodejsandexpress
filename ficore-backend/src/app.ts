@@ -4,9 +4,6 @@ import { config } from './config/env';
 import { connectDB } from './config/db';
 import mainRouter from './routes/index';
 import { errorHandler } from './middleware/error';
-import billRouter from './routes/api-bill';
-import budgetRouter from './routes/api-budget';
-import shoppingRouter from './routes/api-shopping';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -16,13 +13,10 @@ app.use(express.json());
 
 // Main API routes
 app.use('/api', mainRouter);
-app.use('/api/bill', billRouter);
-app.use('/api/budget', budgetRouter);
-app.use('/api/shopping', shoppingRouter);
 
-// Global error handler
+// Global error handler for unhandled errors
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  logger.error('Unhandled error', { error: err, path: req.path });
+  logger.error('Unhandled error', { error: err, path: (req as any).path });
   res.status(err.status || 500).json({
     success: false,
     error: err.message || 'Internal server error',
@@ -32,7 +26,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.use(errorHandler);
 
 connectDB().then(() => {
-  app.listen(5000, () => logger.info('Server running on port 5000'));
+  logger.info('Database connected successfully');
 });
 
 export default app;
