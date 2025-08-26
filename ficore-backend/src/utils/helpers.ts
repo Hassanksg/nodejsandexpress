@@ -28,3 +28,11 @@ export function formatCurrency(value: number | string): string {
     return '0.00';
   }
 }
+
+// Add this new function to resolve the TS2305 error
+export function formatDate(date: Date): string {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new ValidationError('Invalid date provided to formatDate');
+  }
+  return date.toISOString().split('T')[0];
+}
