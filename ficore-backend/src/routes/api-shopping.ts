@@ -1,4 +1,3 @@
-// ficore-backend/src/routes/api-shopping.ts
 import express, { Request, Response } from 'express';
 import { jwtRequired } from '../services/auth';
 import { createShoppingList, addShoppingItem, getShoppingDashboard, toggleShoppingItem, deleteShoppingList, deleteShoppingItem, exportShoppingPDF } from '../controllers/shopping';
@@ -6,17 +5,9 @@ import { UserDocument } from '../models/user';
 
 const router = express.Router();
 
-// Helper to get the user ID and assert its presence
-const getUserId = (req: Request): string => {
-  if (!req.user) {
-    throw new Error('User not authenticated');
-  }
-  return (req.user as UserDocument)._id;
-};
-
 router.post('/new_list', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const shoppingList = await createShoppingList(userId, req.body);
     res.json({ success: true, data: shoppingList });
   } catch (error: any) {
@@ -26,7 +17,7 @@ router.post('/new_list', jwtRequired, async (req: Request, res: Response) => {
 
 router.post('/new_item', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const shoppingItem = await addShoppingItem(userId, req.body);
     res.json({ success: true, data: shoppingItem });
   } catch (error: any) {
@@ -36,8 +27,8 @@ router.post('/new_item', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
-    const dashboardData = await getShoppingDashboard(userId, req.query as any); // Pass req.query
+    const userId = (req.user as UserDocument)._id;
+    const dashboardData = await getShoppingDashboard(userId, req.query);
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -46,8 +37,8 @@ router.get('/dashboard', jwtRequired, async (req: Request, res: Response) => {
 
 router.get('/manage', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
-    const dashboardData = await getShoppingDashboard(userId, req.query as any); // Pass req.query
+    const userId = (req.user as UserDocument)._id;
+    const dashboardData = await getShoppingDashboard(userId, req.query);
     res.json({ success: true, data: dashboardData });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -56,7 +47,7 @@ router.get('/manage', jwtRequired, async (req: Request, res: Response) => {
 
 router.post('/toggle_item', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { itemId } = req.body;
     const item = await toggleShoppingItem(userId, itemId);
     res.json({ success: true, data: item });
@@ -67,7 +58,7 @@ router.post('/toggle_item', jwtRequired, async (req: Request, res: Response) => 
 
 router.post('/delete_list', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { listId } = req.body;
     const result = await deleteShoppingList(userId, listId);
     res.json({ success: true, message: result.message });
@@ -78,7 +69,7 @@ router.post('/delete_list', jwtRequired, async (req: Request, res: Response) => 
 
 router.post('/delete_item', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { itemId } = req.body;
     const result = await deleteShoppingItem(userId, itemId);
     res.json({ success: true, message: result.message });
@@ -89,7 +80,7 @@ router.post('/delete_item', jwtRequired, async (req: Request, res: Response) => 
 
 router.get('/export_pdf/:exportType/:listId?', jwtRequired, async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = (req.user as UserDocument)._id;
     const { exportType, listId } = req.params;
     const pdfBuffer = await exportShoppingPDF(userId, exportType, listId);
     res.setHeader('Content-Type', 'application/pdf');
