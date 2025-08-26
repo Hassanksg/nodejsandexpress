@@ -4,6 +4,9 @@ import { config } from './../config/env';
 import { UserModel } from '../models/user';
 import { UnauthorizedError, ValidationError } from '../types/errors';
 import { logger } from '../utils/logger';
+import { Request, Response, NextFunction } from 'express';
+
+// Existing functions (login, register, validateToken) remain unchanged
 
 export async function login(email: string, password: string) {
   const user = await UserModel.findOne({ email });
@@ -44,5 +47,27 @@ export async function validateToken(token: string) {
     logger.error('Token validation failed', { error });
     throw new UnauthorizedError('Invalid or expired token');
   }
+}
 
+/**
+ * Middleware to check for a valid JWT token on protected routes.
+ * It reads the token from the Authorization header and validates it.
+ */
+export async function jwtRequired(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = await validateToken(token);
+    // Attach the decoded token payload to the request for use in controllers
+    // Example: (req as any).user = decoded; 
+    // This part requires your custom Request type to be defined.
+    (req as any).user = decoded; // Temporary fix
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
 }
