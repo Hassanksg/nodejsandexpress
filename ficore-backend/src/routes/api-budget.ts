@@ -1,5 +1,5 @@
 import express from 'express';
-import { jwtRequired } from '../middleware/auth';
+import { jwtRequired } from '../services/auth';
 import { createBudget, getDashboard, exportBudgetPDF } from '../controllers/budget';
 
 const router = express.Router();
@@ -22,5 +22,6 @@ router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
   }
 });
 router.get('/export_pdf/:exportType/:budgetId?', jwtRequired, exportBudgetPDF);
+
 
 export default router;
