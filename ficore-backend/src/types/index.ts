@@ -1,8 +1,13 @@
-// types/index.ts
-// src/types/express/index.d.ts
-import { UserDocument } from '../../models/user'; // Adjust the path as needed
+// ficore-backend/src/types/index.ts
+import { UserDocument } from '../models/user'; 
 
-
+declare global {
+  namespace Express {
+    export interface Request {
+      user?: UserDocument;
+    }
+  }
+}
 
 export interface BudgetForm {
   income: string | number;
@@ -30,20 +35,4 @@ export interface ShoppingListData {
   list_name: string;
   budget: string | number;
   items: { name: string; estimated_cost: string | number; quantity: number; category?: string }[];
-}
-
-export interface User {
-  id: string;
-  display_name: string;
-  email: string;
-  ficore_credit_balance: number;
-  role: string;
-
-}
-declare global {
-  namespace Express {
-    export interface Request {
-      user?: UserDocument;
-    }
-  }
 }
