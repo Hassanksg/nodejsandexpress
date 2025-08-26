@@ -1,4 +1,3 @@
-// controllers/budget.ts
 import { Request, Response } from 'express';
 import { createBudgetService, getBudgetDashboardService } from '../services/budget';
 import { createBudgetPDF } from '../services/pdf';
@@ -9,10 +8,10 @@ import { deductFicoreCredits } from '../services/credit';
 
 export async function createBudget(req: Request, res: Response) {
   try {
-    const budget = await createBudgetService(req.user.id, req.body, req.headers['x-session-id'] as string);
+    const budget = await createBudgetService(req.user!.id, req.body, req.headers['x-session-id'] as string);
     return res.json({ success: true, budget });
-  } catch (error) {
-    logger.error('Error creating budget', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error creating budget', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
@@ -20,17 +19,17 @@ export async function createBudget(req: Request, res: Response) {
 
 export async function getDashboard(req: Request, res: Response) {
   try {
-    const data = await getBudgetDashboardService(req.user.id, parseInt(req.query.page as string) || 1, Math.min(parseInt(req.query.limit as string) || 10, 50));
+    const data = await getBudgetDashboardService(req.user!.id, parseInt(req.query.page as string) || 1, Math.min(parseInt(req.query.limit as string) || 10, 50));
     return res.json({ success: true, ...data });
-  } catch (error) {
-    logger.error('Error fetching budget dashboard', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error fetching budget dashboard', { error, userId: req.user!.id });
     return res.status(500).json({ success: false, error: error.message });
   }
 }
 
 export async function exportBudgetPDF(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const exportType = req.params.exportType;
     const budgetId = req.params.budgetId;
 
@@ -53,14 +52,14 @@ export async function exportBudgetPDF(req: Request, res: Response) {
     const creditCost = exportType === 'single' ? 1 : 2;
     await deductFicoreCredits(userId, creditCost, `export_budget_pdf_${exportType}`, budgetId || null);
 
-    const pdfBuffer = await createBudgetPDF(budgets, userId, exportType);
+    const pdfBuffer = await createBudgetPDF(budgets, userId, exportType === 'history' ? 'multiple' : 'single');
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=budget_${exportType}_${new Date().toISOString().split('T')[0]}.pdf`,
     });
     return res.send(pdfBuffer);
-  } catch (error) {
-    logger.error('Error exporting budget PDF', { error, userId: req.user.id });
+  } catch (error: any) {
+    logger.error('Error exporting budget PDF', { error, userId: req.user!.id });
     return res.status(error instanceof ValidationError ? 400 : error instanceof NotFoundError ? 404 : error instanceof InsufficientCreditsError ? 402 : 500)
       .json({ success: false, error: error.message });
   }
