@@ -1,4 +1,9 @@
 // types/index.ts
+// src/types/express/index.d.ts
+import { UserDocument } from '../../models/user'; // Adjust the path as needed
+
+
+
 export interface BudgetForm {
   income: string | number;
   housing: string | number;
@@ -33,4 +38,12 @@ export interface User {
   email: string;
   ficore_credit_balance: number;
   role: string;
+
+}
+declare global {
+  namespace Express {
+    export interface Request {
+      user?: UserDocument;
+    }
+  }
 }
