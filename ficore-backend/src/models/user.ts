@@ -1,5 +1,16 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcrypt';
+
+// 1. Define the User interface, extending Mongoose's Document
+export interface User extends Document {
+  display_name: string;
+  email: string;
+  password?: string; // Password is optional here as it may not be returned from queries
+  ficore_credit_balance: number;
+  role: 'user' | 'admin';
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const UserSchema = new Schema({
   display_name: {
@@ -35,7 +46,7 @@ const UserSchema = new Schema({
 });
 
 // Hash password before saving
-UserSchema.pre('save', async function (next) {
+UserSchema.pre('save', async function(next) {
   const user = this;
   if (user.isModified('password')) {
     try {
@@ -48,4 +59,5 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-export const UserModel = mongoose.model('User', UserSchema);
+// 2. Export both the User interface and the UserModel
+export const UserModel = mongoose.model<User>('User', UserSchema);
