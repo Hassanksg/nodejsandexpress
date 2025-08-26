@@ -3,7 +3,7 @@ import { jwtRequired } from '../services/auth';
 import { createBudget, getDashboard, exportBudgetPDF } from '../controllers/budget';
 import { BudgetModel } from '../models/budget';
 import { NotFoundError } from '../types/errors';
-import { deductFicoreCredits } from '../services/ficore';
+import { deductFicoreCredits } from '../services/credit';
 
 const router = express.Router();
 
@@ -30,3 +30,4 @@ router.post('/delete', jwtRequired, async (req: Request, res: Response) => {
 router.get('/export_pdf/:exportType/:budgetId?', jwtRequired, exportBudgetPDF);
 
 export default router;
+
