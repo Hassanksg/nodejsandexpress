@@ -1,24 +1,16 @@
+// ficore-backend/src/services/auth.ts
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
 import { UnauthorizedError } from '../types/errors';
-
-// Define a custom Request interface to include the user property
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    display_name: string;
-    email: string;
-    role: string;
-  };
-}
+import { UserDocument, UserModel } from '../models/user';
 
 /**
  * Middleware to check for a valid JWT token on protected routes.
  * It reads the token from the Authorization header and validates it.
  */
-export const jwtRequired = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const jwtRequired = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   // Check if Authorization header exists and starts with 'Bearer '
@@ -46,14 +38,16 @@ export const jwtRequired = async (req: AuthRequest, res: Response, next: NextFun
       iat?: number;
       exp?: number;
     };
-
+    
     // Attach decoded payload to request
-    req.user = {
-      id: decoded.id,
+    // This is the correct way to assign the user object to the request
+    req.user = new UserModel({
+      _id: decoded.id,
       display_name: decoded.display_name,
       email: decoded.email,
       role: decoded.role,
-    };
+      ficore_credit_balance: 0 // Placeholder or fetched from DB
+    });
 
     logger.info('Token validated successfully', { userId: decoded.id });
     next();
