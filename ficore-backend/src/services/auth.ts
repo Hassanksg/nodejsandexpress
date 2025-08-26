@@ -1,4 +1,4 @@
-Simport jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
