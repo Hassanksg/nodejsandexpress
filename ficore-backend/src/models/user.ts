@@ -1,8 +1,9 @@
+// ficore-backend/src/models/user.ts
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcrypt';
 
-// 1. Define the User interface, extending Mongoose's Document
-export interface User extends Document {
+// 1. Define and export the User interface, extending Mongoose's Document
+export interface UserDocument extends Document {
   display_name: string;
   email: string;
   password?: string; // Password is optional here as it may not be returned from queries
@@ -46,18 +47,18 @@ const UserSchema = new Schema({
 });
 
 // Hash password before saving
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function(this: UserDocument, next) {
   const user = this;
   if (user.isModified('password')) {
     try {
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(user.password, salt);
+      user.password = await bcrypt.hash(user.password!, salt);
     } catch (error) {
-      return next(error);
+      return next(error as Error);
     }
   }
   next();
 });
 
-// 2. Export both the User interface and the UserModel
-export const UserModel = mongoose.model<User>('User', UserSchema);
+// 2. Export the UserModel
+export const UserModel = mongoose.model<UserDocument>('User', UserSchema);
