@@ -1,6 +1,6 @@
 // routes/api-shopping.ts
 import express from 'express';
-import { jwtRequired } from '../middleware/auth';
+import { jwtRequired } from '../services/auth';
 import { createShoppingList, addShoppingItem, getShoppingDashboard, toggleShoppingItem, deleteShoppingList, deleteShoppingItem, exportShoppingPDF } from '../controllers/shopping';
 import { Request, Response } from 'express';
 
@@ -14,5 +14,6 @@ router.post('/toggle_item', jwtRequired, toggleShoppingItem);
 router.post('/delete_list', jwtRequired, deleteShoppingList);
 router.post('/delete_item', jwtRequired, deleteShoppingItem);
 router.get('/export_pdf/:exportType/:listId?', jwtRequired, exportShoppingPDF);
+
 
 export default router;
