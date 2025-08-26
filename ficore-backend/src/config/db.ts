@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { config } from './env';
-import { logger } from '../src/utils/logger';
-
+import { logger } from '../utils/logger';
 export async function connectDB() {
   try {
     await mongoose.connect(config.mongoUri, {
@@ -14,4 +13,5 @@ export async function connectDB() {
     logger.error('MongoDB connection failed', { error });
     throw error;
   }
+
 }
